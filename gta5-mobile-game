@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GTA 5 Mobile Game</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: sans-serif;
+    }
+    canvas {
+      display: block;
+      background: #222;
+    }
+    #hud {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: white;
+      font-size: 18px;
+      z-index: 2;
+    }
+    #controls {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 2;
+    }
+    button {
+      padding: 10px 15px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      background: rgba(0,0,0,0.5);
+      color: white;
+    }
+    #pauseMenu {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 30px;
+      display: none;
+      z-index: 3;
+    }
+    #joystick {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      width: 100px;
+      height: 100px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      touch-action: none;
+      z-index: 2;
+    }
+    #stick {
+      width: 40px;
+      height: 40px;
+      background: rgba(255,255,255,0.8);
+      border-radius: 50%;
+      position: absolute;
+      top: 30px;
+      left: 30px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+  <div id="hud">🚶: 100%</div>
+  <div id="controls">
+    <button id="shoot">Shoot</button>
+    <button id="map">Toggle Map</button>
+    <button id="pauseBtn">Pause</button>
+  </div>
+  <div id="joystick">
+    <div id="stick"></div>
+  </div>
+  <div id="pauseMenu">
+    <h2>Game Paused</h2>
+    <button onclick="resumeGame()">Resume</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    let isPaused = false;
+    let playerX = 100, playerY = 100, playerSpeed = 2;
+
+    function drawPlayer() {
+      ctx.fillStyle = 'lime';
+      ctx.fillRect(playerX, playerY, 30, 30);
+    }
+
+    function gameLoop() {
+      if (!isPaused) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawPlayer();
+      }
+      requestAnimationFrame(gameLoop);
+    }
+
+    function resumeGame() {
+      isPaused = false;
+      document.getElementById('pauseMenu').style.display = 'none';
+    }
+
+    document.getElementById('pauseBtn').onclick = () => {
+      isPaused = true;
+      document.getElementById('pauseMenu').style.display = 'block';
+    };
+
+    // --- Joystick ---
+    const joystick = document.getElementById('joystick');
+    const stick = document.getElementById('stick');
+    let dragging = false, offsetX = 0, offsetY = 0;
+
+    joystick.addEventListener('touchstart', e => {
+      dragging = true;
+    }, false);
+
+    joystick.addEventListener('touchmove', e => {
+      if (!dragging) return;
+      const touch = e.touches[0];
+      const rect = joystick.getBoundingClientRect();
+      const x = touch.clientX - rect.left - 50;
+      const y = touch.clientY - rect.top - 50;
+      offsetX = Math.max(-30, Math.min(30, x));
+      offsetY = Math.max(-30, Math.min(30, y));
+      stick.style.left = `${30 + offsetX}px`;
+      stick.style.top = `${30 + offsetY}px`;
+      e.preventDefault();
+    }, false);
+
+    joystick.addEventListener('touchend', e => {
+      dragging = false;
+      offsetX = 0;
+      offsetY = 0;
+      stick.style.left = '30px';
+      stick.style.top = '30px';
+    }, false);
+
+    setInterval(() => {
+      if (!isPaused) {
+        playerX += offsetX * 0.05 * playerSpeed;
+        playerY += offsetY * 0.05 * playerSpeed;
+      }
+    }, 16);
+
+    gameLoop();
+  </script>
+</body>
+</html>
